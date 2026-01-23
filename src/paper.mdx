@@ -1,37 +1,52 @@
 ---
-title: Research Project Page Template
+title: "ViSA: Visited-State Augmentation for Generalizaed Goal-Space Contrastive Reinforcement Learning"
 authors:
-  - name: Roman Hauksson
-    url: https://roman.technology
-    institution: University of Texas at Dallas
+  - name: Issa Nakamura
+    #url: https://roman.technology
+    institution: NAIST
     notes: ["*", †]
-  - name: Author Two
-    institution: Institution Two
+  - name: Tomoya Yamanokuchi
+    institution: NAIST
     notes: ["*", †]
-  - name: Author Three
-    institution: Institution Three
-    notes: ["*"]
-  - name: Author Four
-    institution: Institution Four
+  - name: Yuki Kadokawa
+    institution: NAIST
+    notes: [†]
+  - name: Jia Qu
+    institution: Mitsubishi Electric
+    notes: [††]
+  - name: Shun Otsubo
+    institution: Mitsubishi Electric
+    notes: [††]
+  - name: Ken Miyamoto
+    institution: Mitsubishi Electric
+    notes: [††]
+  - name: Shotaro Miwa
+    institution: Mitsubishi Electric
+    notes: [††]
+  - name: Takamitsu Matsubara
+    institution: NAIST 
+    notes: [†]
 conference: Conference Name
 notes:
   - symbol: "*"
-    text: author note one
+    text: "equal contribution"
   - symbol: †
-    text: author note two
+    text: Graduate School of Information Science, Nara Institute of Science and Technology (NAIST), Nara, Japan
+  - symbol: ††
+    text: the Advanced Technology R\&D Center, Mitsubishi Electric Corporation, Hyogo, Japan
 links:
-  - name: Paper
-    url: https://github.com/RomanHauksson/academic-project-astro-template
-    icon: ri:file-pdf-2-line
-  - name: Code
-    url: https://github.com/RomanHauksson/academic-project-astro-template
-    icon: ri:github-line
+  # - name: Paper
+  #   url: https://github.com/RomanHauksson/academic-project-astro-template
+  #   icon: ri:file-pdf-2-line
+  # - name: Code
+  #   url: https://github.com/RomanHauksson/academic-project-astro-template
+  #   icon: ri:github-line
   - name: arXiv
     url: https://github.com/RomanHauksson/academic-project-astro-template
     icon: academicons:arxiv
-  - name: Slides
-    url: https://github.com/RomanHauksson/academic-project-astro-template
-    icon: ri:slideshow-2-line
+  # - name: Slides
+  #   url: https://github.com/RomanHauksson/academic-project-astro-template
+  #   icon: ri:slideshow-2-line
 
 # The color theme of the page. Defaults to "device" (the preference set in the user's brower or operating system). Setting this to "light" or "dark" will override the user's preference. This is useful if your figures only look good in one theme.
 theme: device
@@ -68,8 +83,14 @@ import dogsMsillm from "@/assets/dogs-msillm.jpg"
 <HighlightedSection>
 
 ## Abstract
+{/* aaaa
+This is a template you can use to create a professional project page for your research paper. [See the code for the template and instructions on how to use it yourself on GitHub](https://github.com/RomanHauksson/academic-project-astro-template). It's made with the [Astro web framework](https://astro.build/) and styled with [Tailwind](https://tailwindcss.com/). You write the content in [MDX](https://mdxjs.com/), which enables markdown formatting like **bold**, _italics_, and ~strikethrough~, as well as custom components like <SmallCaps>small caps.</SmallCaps> */}
 
-This is a template you can use to create a professional project page for your research paper. [See the code for the template and instructions on how to use it yourself on GitHub](https://github.com/RomanHauksson/academic-project-astro-template). It's made with the [Astro web framework](https://astro.build/) and styled with [Tailwind](https://tailwindcss.com/). You write the content in [MDX](https://mdxjs.com/), which enables markdown formatting like **bold**, _italics_, and ~strikethrough~, as well as custom components like <SmallCaps>small caps.</SmallCaps>
+Goal-Conditioned Reinforcement Learning (GCRL) is a framework for learning a policy that can reach arbitrarily given goals. 
+In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using an approximation of the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
+However, because CRL treats the visited state as a pseudo-goal during learning, it can accurately estimate the value function only for limited goals.
+To address the issue, we propose a novel data augmentation approach for CRL called ViSA (Visited-State Augmentation). ViSA consists of two components: 1) generating augmented state samples to augment hard-to-visit state samples during on-policy exploration, and 2) learning consistent embedding space, which uses augmented state as auxiliary information to regularize the embedding space, by reformulating the objective function of the embedding space based on Mutual Information.
+We evaluate ViSA in simulation and real-world robotic tasks and show improved goal-space generalization, enabling accurate value estimation 
 
 </HighlightedSection>
 
