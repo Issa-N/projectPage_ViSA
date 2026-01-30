@@ -6,6 +6,7 @@ interface Props extends HTMLAttributes<"video"> {
 
 const {
   src,
+  caption,
   controls = true,
   loop = true,
   playsinline = true,
@@ -24,3 +25,10 @@ const {
   muted={muted}
   autoplay={autoplay}
   {...videoProps}></video>
+
+  {caption && (
+    <figcaption class="mt-2 text-center text-base font-medium text-gray-700 dark:text-gray-300">
+      {caption}
+    </figcaption>
+  )}
+</figure>

@@ -48,6 +48,7 @@ links:
   #   url: https://github.com/RomanHauksson/academic-project-astro-template
   #   icon: ri:slideshow-2-line
 
+
 # The color theme of the page. Defaults to "device" (the preference set in the user's brower or operating system). Setting this to "light" or "dark" will override the user's preference. This is useful if your figures only look good in one theme.
 theme: device
 
@@ -78,14 +79,34 @@ import dogsDiffc from "./assets/dogs-diffc.png"
 import dogsTrue from "./assets/dogs-true.png"
 import dogsMsillm from "@/assets/dogs-msillm.jpg"
 
-<Video src={outside} />
+{/* ロゴの挿入 */}
+import NAISTLogo from "./assets/NAIST_Logo.png";
+import RLLogo from "./assets/RL_Logo.jpg";
+import MELogo from "./assets/Mitsubishi_Electric_Logo.png";
+
+{/* 図の挿入 */}
+import Approach from "./assets/Approach.png";
+
+{/* 動画の挿入 */}
+
+<div class="mt-4 flex justify-center gap-8">
+  <img src={NAISTLogo.src} alt="NAIST" class="h-21 w-auto" />
+  <img src={RLLogo.src} alt="RLLogo" class="h-25 w-auto" />
+  <img src={MELogo.src} alt="MELogo" class="h-16 w-auto" />
+</div> 
+
+
+{/* <Video src={outside} /> */}
+import Push from "./assets/Push.mp4";
+import Pick from "./assets/Pick.mp4";
+import RobelTurn from "./assets/RobelTurn.mp4";
+import RobelScrew from "./assets/RobelScrew.mp4";
+import RobelTurnReal from "./assets/RobelTurnReal.mp4";
+import RobelScrewReal from "./assets/RobelScrewReal.mp4";
 
 <HighlightedSection>
 
 ## Abstract
-{/* aaaa
-This is a template you can use to create a professional project page for your research paper. [See the code for the template and instructions on how to use it yourself on GitHub](https://github.com/RomanHauksson/academic-project-astro-template). It's made with the [Astro web framework](https://astro.build/) and styled with [Tailwind](https://tailwindcss.com/). You write the content in [MDX](https://mdxjs.com/), which enables markdown formatting like **bold**, _italics_, and ~strikethrough~, as well as custom components like <SmallCaps>small caps.</SmallCaps> */}
-
 Goal-Conditioned Reinforcement Learning (GCRL) is a framework for learning a policy that can reach arbitrarily given goals. 
 In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using an approximation of the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
 However, because CRL treats the visited state as a pseudo-goal during learning, it can accurately estimate the value function only for limited goals.
@@ -94,7 +115,79 @@ We evaluate ViSA in simulation and real-world robotic tasks and show improved go
 
 </HighlightedSection>
 
-## Visuals
+## Overview
+We artificially augment visited states (augmented states) that are inherently reachable under current policy but insufficiently visited in limited on-policy rollouts.
+In addition, instead of using augmented states merely as additional visited states, we leverage them as auxiliary information to regularize the embedding space, encouraging it to jointly calibrate relative distances to both rarely visited and originally visited states.
+As a result, this prevents overfitting to the limited visited states which ware obtained from on-policy rollouts.
+
+<Picture src={Approach} alt="Photo of two running dogs, lossily compressed using the DiffC algorithm" />
+
+## Simulation experiments
+### Common experiment settings
+To confirm that our method improves the learning performance of CRL across a variety of robotic tasks, we conducted simulation-based learning on several robotic tasks and compared task performance.
+As comparison methods, we used the previous CRL method and several goal-conditioned learning baselines. Each method was learned for three trials.
+On this page, we present demonstrations comparing the proposed method with the previous CRL method.
+
+
+### Demonstration
+#### Fetch push
+A task in which a manipulator pushes a box to a target position on the table.
+The initial positions of the end-effector and the box, as well as the goal positions, were uniformly randomized.
+<Video src={Push} />
+
+#### Pick & Place
+A task in which a manipulator grasps a box and transports it to a target position on the table or in the air.
+The initial positions of the end-effector and the box, as well as the goal positions, were uniformly randomized.
+<Video src={Pick} />
+
+#### Robel Turn
+A task in which a three-fingered robotic hand rotates a valve to an arbitrary target angle.
+The initial valve positions, robot fingertips, and goals were uniformly randomized.
+<Video src={RobelTurn} />
+
+#### Robel Screw
+A task in which the robot rotates a valve by half a turn at a constant speed.
+<Video src={RobelScrew} />
+
+
+## Real-world Experiment
+To evaluate the effectiveness of our method for real-world robot learning, we conducted comparative experiments against previous CRL method using the Robel robot.
+Each task was learned under the same settings as in the simulation experiment.
+In addtion, for Robel Turn which has a large exploration-space, we initialized the policy with a network trained in simulation and fine-tuned it on the real robot.
+For Robel Screw, we learns the policy with full scratch.
+
+#### Robel Turn
+<Video src={RobelTurnReal} caption="Robel Turn"/>
+
+#### Robel Screw
+<Video src={RobelScrewReal} caption="Robel Screw"/>
+
+
+## Detail of learning settings
+
+The details of the learning settings used in the experiments of this study are presented in the table below.
+In the actor network, two types of activation functions are employed: 1)&nbsp;NormalArcTangent is used only in the final layer, while 2)&nbsp;ReLU function is primarily applied throughout the network.
+Furthermore, to enable parallel learning, the actor operates with four instances in parallel during exploration.
+However, for tasks using the Robel robot, parallel learning is not performed, and training is conducted using only a single instance.
+
+| Learning Setting | Value |
+| :--- | :--- | 
+| number of Actor | 4<br />1 (When Robel Turn task and Robel Screw task)|
+| batch size | 128 |
+| learning rate | 3e-4 |
+| discount | 0.99 |
+| gradient updates to perform per step | 32 |
+| actor target entropy | 0 |
+| hidden layers sizes | (256, 256) |
+| initial random data collection | 10,000 transitions |
+| replay buffer size | 1,000,000 transitions |
+| samples per insert | 256 |
+| train-collect interval | 16 |
+| representation dimension$\psi, \phi, \hat{\phi}$ | 64 |
+| activation function(critic) | ReLU |
+| activation function(actor) | ReLU <br /> NormalArcTagent |
+
+{/* ## Visuals
 
 ### Picture
 
@@ -184,46 +277,42 @@ Use the two columns component to display two columns of content. In this example
 <TwoColumns>
   <YouTubeVideo slot="left" videoId="wjZofJX0v4M" />
   <ModelViewer slot="right" src="/BoxVertexColors.glb" alt="A cube colored with a rainbow gradient" />
-</TwoColumns>
+</TwoColumns> */}
 
-## $\LaTeX$
+{/* ## $\LaTeX$
 
 You can also add $\LaTeX$ formulas, rendered during the build process using [$\KaTeX$](https://katex.org/) so they're quick to load for visitors of your project page. You can write them inline, like this: $a^2 + b^2 = c^2$. Or, you can write them as a block:
 
 $$
 \int_a^b f(x) dx
-$$
+$$ */}
 
-## Citation
+{/* ## Citation
 
 If you copy your bibliography into `./bibliography.bib`, you can cite papers using their BibTeX keys, and they'll be automatically formatted and included in the bibliography section at the end. For example: [@vaswani2017attention]. Note that these citations are distinct from footnotes[^mynote], which show up in a separate section if you use them.
 
-[^mynote]: On the web, they should really be called "endnotes", since each page constitutes a full document.
+[^mynote]: On the web, they should really be called "endnotes", since each page constitutes a full document. */}
 
-## Table
-
-Add simple tables using [GitHub Flavored Markdown syntax](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables):
-
-| Model | Accuracy | F1 score | Training time (hours) |
-| :--- | :---: | :---: | :---: |
-| BERT-base | 0.89 | 0.87 | 4.5 |
-| RoBERTa-large | 0.92 | 0.91 | 7.2 |
-| DistilBERT | 0.86 | 0.84 | 2.1 |
-| XLNet | 0.90 | 0.89 | 6.8 |
 
 ## BibTeX citation
 
-Displaying the BibTeX entry for your paper in a code block makes it easy to copy and paste.
+Displaying the BibTeX entry for your paper in a code block makes it easy to copy and paste. */}
 
 ```bibtex
 @misc{roman2024academic,
-  author = "{Roman Hauksson}",
-  title = "Academic Project Page Template",
-  year = "2024",
-  howpublished = "\url{https://research-template.roman.technology}",
+  author = "{Issa Nakamura and 
+              Tomoya Yamanokuchi and
+              Yuki Kadokawa and
+              Jia Qu and
+              Shun Otsubo and
+              Ken Miyamoto and
+              Shotaro Miwa and
+              Takamitsu Matsubara}",
+  title = "ViSA: Visited-State Augmentation for Generalizaed Goal-Space Contrastive Reinforcement Learning",
+  year = "2026",
 }
 ```
 
-## Bibliography
+{/* ## Bibliography
 
-[^ref]
+[^ref] */}

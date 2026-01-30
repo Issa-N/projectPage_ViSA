@@ -1,0 +1,22 @@
+---
+interface Logo {
+  src: string;
+  alt: string;
+  height: number;
+}
+
+interface Props {
+  logos: Logo[];
+}
+
+const { logos } = Astro.props;
+---
+
+{logos && logos.length > 0 && (
+  <div class="mt-4 flex justify-center gap-8">
+    {logos.map((logo) => (
+      // <img src={logo.src} alt={logo.alt} class={`h-[${logo.height}px] w-auto`} />
+      <img src="../assets/NAIST_Logo.png" alt="NAIST" class="h-21 w-auto" />
+    ))}
+  </div>
+)}
