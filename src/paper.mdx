@@ -86,6 +86,7 @@ import MELogo from "./assets/Mitsubishi_Electric_Logo.png";
 
 {/* 図の挿入 */}
 import Approach from "./assets/Approach.png";
+import ResultMI from "./assets/result_MI.png"
 
 {/* 動画の挿入 */}
 
@@ -120,7 +121,7 @@ We artificially augment visited states (augmented states) that are inherently re
 In addition, instead of using augmented states merely as additional visited states, we leverage them as auxiliary information to regularize the embedding space, encouraging it to jointly calibrate relative distances to both rarely visited and originally visited states.
 As a result, this prevents overfitting to the limited visited states which ware obtained from on-policy rollouts.
 
-<Picture src={Approach} alt="Photo of two running dogs, lossily compressed using the DiffC algorithm" />
+<Picture src={Approach} alt="Approach" caption="Overview of ViSA" />
 
 ## Simulation experiments
 ### Common experiment settings
@@ -161,6 +162,37 @@ For Robel Screw, we learns the policy with full scratch.
 
 #### Robel Screw
 <Video src={RobelScrewReal} caption="Robel Screw"/>
+
+## Analysis of Mutual Information Estimation Accuracy
+#### Setup
+Learning the embedding space in CRL can be viewed as a mutual information (MI) estimation problem, since the objective is to maximize InfoNCE loss. {/*  \cite{CPC}.  */}
+To evaluate whether the factorized MI estimation using $I_{SaFE}$ in ViSA contributes to improving accuracy, we compared the errors between ground-truth and estimated MI values using synthetic datasets.
+ 
+We simulated the sample bias in CRL using a key property of Gaussian distributions, where samples concentrate near the mean and few samples occur far from it. 
+Specifically, three variables $x,y,z$ corresponding to anchor, visited state, and augmented state are generated via linear transformations and added Gaussian noise $\mathcal{N}(0,I)$:
+
+$$
+p(x)= \mathcal{N}(x;0,I),~p(y|x)= \mathcal{N}(y;x,\sigma_{xy}),~p(z)= \mathcal{N}(z;y,\sigma_{yz}).
+$$
+
+Here, $I$ is the identity matrix. To preferentially augment hard-to-sample $y$ samples, we set $\sigma_{xy}<\sigma_{yz}$ and generated $z$ from a higher-variance Gaussian. 
+Mini-batch size was set to 256, and $\sigma_{xy}$ was varied so that the ground-truth MI $I(x;y)$ takes \{3.5, 4.5, 5.5\}, validating estimator generality. 
+For a fair comparison, the total number of $y$ and $z$ samples matched the number of $y$ samples in CRL.
+To validate the effect of augmented state relevance on MI estimation, we varied $\sigma_{yz}$ so that $I(y;z)$ corresponds to \{1/2, 1/32, 1/55\} of $I(x;y)$, as shown in the bellow figure (b).
+{/* Fig.~\ref{fig:feature} (b). */}
+
+#### Results
+The MI analysis results are shown in the bellow figure (a). 
+Across different MI values, our method (orange line) estimates MI closer to the ground truth (black line) than the conventional estimator $I_{NCE}$, since augmented states supplement hard-to-sample data and regularize the embedding space.
+Consequently, when augmented states are properly related to visited states, MI estimation is more accurate.
+
+<Picture src={ResultMI} 
+alt="resutl MI"
+caption="Results of MI analysis experiment: (a) Experiment result, where solid lines show estimated MI values for each method and the ground-truth MI of the dataset and dashed black lines indicate the upper bound of MI estimated by InfoNCE loss. 
+      From left to right, these results correspond to settings where the MI between visited states and augmented states is increasingly higher. 
+      (b) Outline diagram illustrating the relevance between visited and augmented states." />
+
+
 
 
 ## Detail of learning settings

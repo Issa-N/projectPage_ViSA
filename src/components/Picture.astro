@@ -1,15 +1,53 @@
 ---
+// import { Picture as AstroPicture } from "astro:assets";
+// import { renderPDF } from "../lib/render-pdf";
+
+// interface Props {
+//   src: ImageMetadata | `${string}.pdf`;
+//   alt: string;
+//   priority?: boolean;
+//   invertInDarkMode?: boolean;
+// }
+
+// const { src, alt, priority = false, invertInDarkMode = false } = Astro.props;
+
+// let image: ImageMetadata;
+
+// if (typeof src === "string") {
+//   image = await renderPDF(src);
+// } else {
+//   image = src;
+// }
+// ---
+
+// <AstroPicture
+//   class={`rounded-lg max-h-[calc(100svh-3rem)] max-w-full w-min mx-auto ${invertInDarkMode ? "dark:invert" : ""}`}
+//   src={image}
+//   alt={alt}
+//   layout="constrained"
+//   formats={["avif"]}
+//   priority={priority}
+//   fit="contain"
+// />
+
 import { Picture as AstroPicture } from "astro:assets";
 import { renderPDF } from "../lib/render-pdf";
 
 interface Props {
   src: ImageMetadata | `${string}.pdf`;
   alt: string;
+  caption?: string;          // ← 追加
   priority?: boolean;
   invertInDarkMode?: boolean;
 }
 
-const { src, alt, priority = false, invertInDarkMode = false } = Astro.props;
+const {
+  src,
+  alt,
+  caption,
+  priority = false,
+  invertInDarkMode = false
+} = Astro.props;
 
 let image: ImageMetadata;
 
@@ -20,12 +58,21 @@ if (typeof src === "string") {
 }
 ---
 
-<AstroPicture
-  class={`rounded-lg max-h-[calc(100svh-3rem)] max-w-full w-min mx-auto ${invertInDarkMode ? "dark:invert" : ""}`}
-  src={image}
-  alt={alt}
-  layout="constrained"
-  formats={["avif"]}
-  priority={priority}
-  fit="contain"
-/>
+<figure class="flex flex-col items-center my-6">
+  <AstroPicture
+    class={`rounded-lg max-h-[calc(100svh-3rem)] max-w-full w-min mx-auto ${invertInDarkMode ? "dark:invert" : ""}`}
+    src={image}
+    alt={alt}
+    layout="constrained"
+    formats={["avif"]}
+    priority={priority}
+    fit="contain"
+  />
+
+  {caption && (
+    <figcaption class="mt-2 text-sm text-gray-500 text-center">
+      {caption}
+    </figcaption>
+  )}
+</figure>
+
