@@ -88,6 +88,15 @@ import MELogo from "./assets/Mitsubishi_Electric_Logo.png";
 {/* 図の挿入 */}
 import Approach from "./assets/Approach.png";
 import ResultMI from "./assets/result_MI.png"
+import EX2_GEOM from "./assets/Ex2_GEOM.png"
+import T_Push from "./assets/FetchPush.png"
+import T_PushHard from "./assets/FetchPushHard.png"
+import T_Pick from "./assets/Pick.png"
+import T_PickHard from "./assets/PickHard.png"
+import T_PickObstacle from "./assets/PickObstacle.png"
+import T_RobelTurn from "./assets/RobelTurn.png"
+import T_RobelScrew from "./assets/RobelScrew.png"
+import T_TaskSpace from "./assets/TaskSpaceRobel.png"
 
 {/* 動画の挿入 */}
 
@@ -108,7 +117,7 @@ import RobelScrewReal from "./assets/RobelScrewReal.mp4";
 
 <HighlightedSection>
 
-## Abstract
+## 1.Abstract
 Goal-Conditioned Reinforcement Learning (GCRL) is a framework for learning a policy that can reach arbitrarily given goals. 
 In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using an approximation of the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
 However, because CRL treats the visited state as a pseudo-goal during learning, it can accurately estimate the value function only for limited goals.
@@ -117,21 +126,21 @@ We evaluate ViSA in simulation and real-world robotic tasks and show improved go
 
 </HighlightedSection>
 
-## Overview
+## 2.Overview
 We artificially augment visited states (augmented states) that are inherently reachable under current policy but insufficiently visited in limited on-policy rollouts.
 In addition, instead of using augmented states merely as additional visited states, we leverage them as auxiliary information to regularize the embedding space, encouraging it to jointly calibrate relative distances to both rarely visited and originally visited states.
 As a result, this prevents overfitting to the limited visited states which ware obtained from on-policy rollouts.
 
-<Picture src={Approach} alt="Approach" caption="Overview of ViSA" />
+<Picture src={Approach} alt="Approach" caption="Fig.1 Overview of ViSA" />
 
-## Simulation experiments
-### Common experiment settings
+## 3.Simulation experiments
+### 3.1.Common experiment settings
 To confirm that our method improves the learning performance of CRL across a variety of robotic tasks, we conducted simulation-based learning on several robotic tasks and compared task performance.
 As comparison methods, we used the previous CRL method and several goal-conditioned learning baselines. Each method was learned for three trials.
 On this page, we present demonstrations comparing the proposed method with the previous CRL method.
 
 
-### Demonstration
+### 3.2.Demonstration
 #### Fetch push
 A task in which a manipulator pushes a box to a target position on the table.
 The initial positions of the end-effector and the box, as well as the goal positions, were uniformly randomized.
@@ -152,7 +161,7 @@ A task in which the robot rotates a valve by half a turn at a constant speed.
 <Video src={RobelScrew} />
 
 
-## Real-world Experiment
+## 4.Real-world Experiment
 To evaluate the effectiveness of our method for real-world robot learning, we conducted comparative experiments against previous CRL method using the Robel robot.
 Each task was learned under the same settings as in the simulation experiment.
 In addtion, for Robel Turn which has a large exploration-space, we initialized the policy with a network trained in simulation and fine-tuned it on the real robot.
@@ -164,8 +173,8 @@ For Robel Screw, we learns the policy with full scratch.
 #### Robel Screw
 <Video src={RobelScrewReal} caption="Robel Screw"/>
 
-## Analysis of Mutual Information Estimation Accuracy
-#### Setup
+## 5.Analysis of Mutual Information Estimation Accuracy
+### 5.1.Setup
 Learning the embedding space in CRL can be viewed as a mutual information (MI) estimation problem, since the objective is to maximize InfoNCE loss. {/*  \cite{CPC}.  */}
 To evaluate whether the factorized MI estimation using $I_{SaFE}$ in ViSA contributes to improving accuracy, we compared the errors between ground-truth and estimated MI values using synthetic datasets.
  
@@ -182,21 +191,45 @@ For a fair comparison, the total number of $y$ and $z$ samples matched the numbe
 To validate the effect of augmented state relevance on MI estimation, we varied $\sigma_{yz}$ so that $I(y;z)$ corresponds to \{1/2, 1/32, 1/55\} of $I(x;y)$, as shown in the bellow figure (b).
 {/* Fig.~\ref{fig:feature} (b). */}
 
-#### Results
+#### 5.2.Results
 The MI analysis results are shown in the bellow figure (a). 
 Across different MI values, our method (orange line) estimates MI closer to the ground truth (black line) than the conventional estimator $I_{NCE}$, since augmented states supplement hard-to-sample data and regularize the embedding space.
 Consequently, when augmented states are properly related to visited states, MI estimation is more accurate.
 
 <Picture src={ResultMI} 
 alt="resutl MI"
-caption="Results of MI analysis experiment: (a) Experiment result, where solid lines show estimated MI values for each method and the ground-truth MI of the dataset and dashed black lines indicate the upper bound of MI estimated by InfoNCE loss. 
+caption="Fig.2 Results of MI analysis experiment: (a) Experiment result, where solid lines show estimated MI values for each method and the ground-truth MI of the dataset and dashed black lines indicate the upper bound of MI estimated by InfoNCE loss. 
       From left to right, these results correspond to settings where the MI between visited states and augmented states is increasingly higher. 
       (b) Outline diagram illustrating the relevance between visited and augmented states." />
 
 
+## 6.Comparison with Naive Sample-Bias Mitigation Methods of Conventional CRL
+### 6.1.Setup
+One possible way to mitigate sample bias in conventional CRL is to broaden the range of positive samples collected from visited states without introducing augmented states.
+In conventional CRL, the discount factor $\gamma$ determines the sampling distribution of future visited states used as positive examples. Increasing $\gamma$ allows positive samples to be collected from a wider temporal range of the trajectory, thereby reducing the concentration of positive samples around states close to the anchor.
 
+To investigate whether the benefits of ViSA can be explained solely by collecting positive samples from a broader range of visited states, we compare ViSA with a conventional CRL approach that broadens the positive-sample range by adjusting the discount factor.
+Specifically, we evaluate CRL using three discount factors, $\gamma \in {0.99, 0.999, 0.9999}$.
+The visited state distribution for each compared method is shown in Fig.3 (a).
+The Robel Screw task is used for evaluation.
 
-## Detail of learning settings
+<Picture src={EX2_GEOM} 
+alt="Ablation_CRL"
+caption="Fig.3 Visited state distributions and learning results for a naive sample diversification CRL method.
+            (a) Visualization of visited state distributions. CRL is modified by adjusting discount factor $\gamma$ to collect visited state samples $s_v$ more broadly from on-policy rollouts. For visualization, sampling probabilities are normalized so that the maximum value is 1.
+            (b) Learning curves of success rates. Solid lines show mean success rates over three trials for proposed method and baselines, and shaded regions designate variance." />
+#### 6.2.Results
+The learning curves of success rates are shown in Fig.3 (b).
+Although increasing $\gamma$ broadens the range of visited states from which positive examples are sampled, the CRL variants with $\gamma=0.999$ (solid yellow line) and $\gamma=0.9999$ (solid green line) exhibit larger variance across trials and slightly worse performance than the original setting with $\gamma=0.99$ (solid blue line).
+
+A possible explanation is that increasing $\gamma$ reduces the difference in sampling frequencies among future states at different temporal distances from the anchor, thereby weakening the relative value structure induced by the number of steps required to reach the goal.
+In contrast, ViSA (solid purple line) incorporates augmented states $s_a$ as auxiliary information while preserving the relative ordering of values associated with visited states in the embedding space.
+As a result, ViSA achieves faster convergence and lower variance across trials.
+
+These results suggest that the performance gains of ViSA cannot be explained solely by collecting positive examples from a broader range of visited states.
+Instead, incorporating augmented states through the proposed objective plays an important role in mitigating sample bias while maintaining a consistent value structure in the learned representation.
+
+## 7.Detail of learning settings
 
 The details of the learning settings used in the experiments of this study are presented in the table below.
 In the actor network, two types of activation functions are employed: 1)&nbsp;NormalArcTangent is used only in the final layer, while 2)&nbsp;ReLU function is primarily applied throughout the network.
@@ -207,7 +240,7 @@ However, for tasks using the Robel robot, parallel learning is not performed, an
 | :--- | :--- | 
 | number of Actor | 4<br />1 (When Robel Turn task and Robel Screw task)|
 | batch size | 128 |
-| learning rate | 3e-4 |
+| learning rate | 0.0003|
 | discount | 0.99 |
 | gradient updates to perform per step | 32 |
 | actor target entropy | 0 |
@@ -218,7 +251,123 @@ However, for tasks using the Robel robot, parallel learning is not performed, an
 | train-collect interval | 16 |
 | representation dimension$\psi, \phi, \hat{\phi}$ | 64 |
 | activation function(critic) | ReLU |
-| activation function(actor) | ReLU <br /> NormalArcTagent |
+| activation function(actor) | ReLU (hidden layer) <br /> NormalArcTagent (final layer)|
+
+## 8.Detail of task settings
+### 8.1.Fetch Push
+<Picture src={T_Push} alt="T_FetchPush" caption="Overview of Fetch Push" />
+The observation space is a 25-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
+The goal space is originally defined as a 6-dimensional vector composed of the end-effector position and object position. However, to map observations and goals into the same embedding space for contrastive learning, the remaining dimensions are padded with dummy values, resulting in a 25 dimensional representation matching the observation space. 
+The action space is defined as a 3-dimensional vector representing the displacement of the end-effector position.
+The task achievement condition $\Phi_{TA}$ is defined as bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
+$$
+\Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)=\mathbf{1}\left(\left\lVert\begin{array}{c}
+    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+    \end{array}\right\lVert<0.05\right).
+$$
+The reward function $r$ is defined as the sparse reward shown in bellow, where a reward is provided only when the task achievement condition is satisfied:
+$$
+    r = \mathbf{1}(\Phi_{TA}=1).
+$$
+
+### 8.2.Fetch Push hard
+<Picture src={T_PushHard} alt="T_FetchPushHard" caption="Overview of Fetch Push Hard" />
+The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. Specifically, this metric is defined based on the number of timesteps required to reach the goal and is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
+The task achievement condition $\Phi_{TA}$ is extended as show in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$.
+$$
+    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot(score_{\mathrm{reach-time}}>\epsilon)\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
+    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g} \end{array}\right\lVert<0.05\right)\cdot(score_{\mathrm{reach-time}}>\epsilon).
+$$
+
+The reward $r$ is defined in the same manner as in the Fetch Push task, where a sparse reward is provided only when the task achievement condition is satisfied:
+$$
+    r = \mathbf{1}(\Phi_{TA}=1).
+$$
+
+### 8.3.Pick \& Place
+<Picture src={T_Pick} alt="T_Pick" caption="Overview of Pick & Place" />
+The observation space is a 27-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
+The action space is defined as a 4-dimensional vector representing the displacement of the end-effector position and gripper position.
+The goal space is originally defined as a 7-dimensional vector that includes the end-effector position, the box position, and additional elements.  It is then padded with dummy values, resulting in a 27-dimensional goal representation.
+In addition, a subgoal-based goal representation is adopted in this task. Specifically, while the end-effector is away from the box, the box position is provided as the goal position of the end-effector. Once the end-effector reaches the box, the goal position of the end-effector is switched to the task goal position. In this manner, the goal of the end-effector is specified in two stages according to the progress of the task.
+The task achievement condition $\Phi_{TA}$ is defined as in bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
+$$
+        \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)=\mathbf{1}\left(\left\lVert\begin{array}{c}
+        x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+        \end{array}\right\lVert<0.05\right).
+$$
+The reward function $r$ is defined as the sparse reward, where a reward is provided only when the task achievement condition is satisfied:
+$$
+    r = \mathbf{1}(\Phi_{TA}=1).
+$$
+
+### 8.4.Pick \& Place Hard
+<Picture src={T_PickHard} alt="T_PickHard" caption="Overview of Pick & Place Hard" />
+The training setup is identical to that of the Pick \& Place task, except that a height constraint on the box is introduced. Specifically, the average box height over the past 5 steps, $\mathrm{avg}(z_{\mathrm{box}})$, is added to both the observation and goal representations. As a result, the observation space becomes 28-dimensional and the goal space becomes 8-dimensional, which is then padded with dummy values to obtain a 28-dimensional representation.
+The task achievement condition $\Phi_{TA}$ is extended as shown in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the average box height $\mathrm{avg}(z_{\mathrm{box}})$ remains within a predefined tolerance range.
+$$
+    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot\mathbf{1}(\lVert \mathrm{avg}(z_{\mathrm{box}})-z_g\lVert<0.05)\\
+            =\mathbf{1}\left(\left\lVert\begin{array}{c}
+            x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+            \end{array}\right\lVert<0.05\right)\cdot\mathbf{1}(\lVert \mathrm{avg}(z_{\mathrm{box}}) -z_g\lVert<0.05).
+$$
+The reward $r$ is defined in the same manner as in the Pick \& Place task, where a sparse reward is provided only when the task achievement condition is satisfied:
+$$
+    r = \mathbf{1}(\Phi_{TA}=1).
+$$
+
+### 8.5.Pick \& Place Obstacle
+<Picture src={T_PickObstacle} alt="T_PickObstacle" caption="Overview of Pick & Place Obstacle" />
+The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation.
+The task achievement condition $\Phi_{TA}$ is extended as shown in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ sufficient to avoid the obstacle at least once during the episode.
+$$
+    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot\mathbf{1}(z_{box}\geq h_{obstacle})\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
+    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+    \end{array}\right\lVert<0.05\right)\cdot\mathbf{1}(z_{box}\geq h_{obstacle}).
+$$
+The reward $r$ is defined in the same manner as in the Pick \& Place task, where a sparse reward is provided only when the task achievement condition is satisfied:
+$$
+    r = \mathbf{1}(\Phi_{TA}=1).
+$$
+
+### 8.6.Robel Turn
+<Picture src={T_RobelTurn} alt="T_RobelTurn" caption="Overview of Robel Turn" />
+<Picture src={T_TaskSpace} alt="T_TaskSpace" caption="Task space of Robel Tasks" />
+The observation space is a 13-dimensional vector consisting of the valve angle, the end-effector position, and additional state information. 
+The action space is constrained such that each finger of the robotic hand moves along a 2-dimensional trajectory. 
+For each finger, a 3-dimensional action vector corresponding to the displacement along the trajectory is provided.
+
+The goal space is a 5-dimensional vector consisting of the valve angle and the number of goal-holding steps. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 13-dimensional representation.
+In addition, a subgoal-based representation is adopted in this task, where the required number of goal-holding steps is adjusted in three stages according to the difference between the current valve angle and the target goal angle.
+The reward $r$ is defined as in bellow, where a sparse reward of 1 is given when the difference between the valve angle and the goal angle falls below a predefined threshold.
+$$
+    r=\mathbf{1}\left(\left\lVert\begin{array}{c}
+    x_{v}-x_{g}\\y_{v}-y_{g}\\
+    \end{array}\right\lVert\leq0.35 \right)
+$$
+Here, $(x_v, y_v)$ and $(x_g, y_g)$ denote the 2-dimensional embeddings of the valve angle and goal angle on the unit circle, respectively.
+The task achievement condition $\Phi_{TA}$ is defined as success if $r = 1$ holds at the final step of an episode.
+
+Furthermore, in the Robel Turn task, training is performed with an early-termination mechanism, where the episode is terminated if the task achievement condition is satisfied for 10 consecutive steps.
+
+### 8.7.Robel Screw
+<Picture src={T_RobelScrew} alt="T_RobelScrew" caption="Overview of Robel Screw" />
+The observation space is a 13-dimensional vector consisting of the valve angle, the end-effector position, and additional state information. 
+The action space is constrained such that each finger of the robotic hand moves along a 2-dimensional trajectory. 
+For each finger, a 3-dimensional action vector corresponding to the displacement along the trajectory is provided.
+The goal space is a 5-dimensional vector consisting of the valve angle and the number of goal-holding steps. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 13-dimensional representation.
+In addition, a subgoal-based representation is adopted in this task, where the target valve angle is updated at each step in order to rotate the valve at a constant speed. This design provides the agent with sequential angle targets that evolve over time.
+The task achievement condition $\Phi_{TA}$ is defined as in bellow. Specifically, an episode is considered successful if the number of timesteps during which the valve reaches the goal exceeds a predefined threshold:
+$$
+    \Phi_{TA}=\mathbf{1}\left(\sum_{t=0}^{T}\Phi_t\geq144\right)\\
+    \Phi_{t}=\mathbf{1}\left(\left\lVert
+    \begin{array}{c}
+        x_{t}-x_{g}\\y_{t}-y_{g}
+    \end{array}
+    \right\lVert\leq0.35\right)
+$$
+Here, $(x_t, y_t)$ and $(x_g, y_g)$ denote the 2-dimensional embeddings of the valve angle and goal angle on the unit circle at timestep $t$, respectively.
+The reward $r$ is sparsely provided when the task achievement condition is satisfied.
 
 {/* ## Visuals
 
