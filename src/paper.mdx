@@ -177,7 +177,11 @@ For Robel Screw, we learns the policy with full scratch.
 ### 5.1.Setup
 Learning the embedding space in CRL can be viewed as a mutual information (MI) estimation problem, since the objective is to maximize InfoNCE loss. {/*  \cite{CPC}.  */}
 To evaluate whether the factorized MI estimation using $I_{SaFE}$ in ViSA contributes to improving accuracy, we compared the errors between ground-truth and estimated MI values using synthetic datasets.
- 
+{/* RAL後に以下の部分をついか */}
+In addition to evaluating estimation accuracy, this analysis provides additional insight into the contribution of the proposed MI estimation framework. 
+Specifically, we compare ViSA against InfoNCE and CLUB to evaluate the effect of the proposed MI factorization and the resulting objective $I_{BO}$ independently of the augmentation strategy.
+{/*  */}
+
 We simulated the sample bias in CRL using a key property of Gaussian distributions, where samples concentrate near the mean and few samples occur far from it. 
 Specifically, three variables $x,y,z$ corresponding to anchor, visited state, and augmented state are generated via linear transformations and added Gaussian noise $\mathcal{N}(0,I)$:
 
