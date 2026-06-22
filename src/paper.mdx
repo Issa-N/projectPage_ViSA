@@ -213,7 +213,7 @@ One possible way to mitigate sample bias in conventional CRL is to broaden the r
 In conventional CRL, the discount factor $\gamma$ determines the sampling distribution of future visited states used as positive examples. Increasing $\gamma$ allows positive samples to be collected from a wider temporal range of the trajectory, thereby reducing the concentration of positive samples around states close to the anchor.
 
 To investigate whether the benefits of ViSA can be explained solely by collecting positive samples from a broader range of visited states, we compare ViSA with a conventional CRL approach that broadens the positive-sample range by adjusting the discount factor.
-Specifically, we evaluate CRL using three discount factors, $\gamma \in {0.99, 0.999, 0.9999}$.
+Specifically, we evaluate CRL using three discount factors, $\gamma \in \{0.99, 0.999, 0.9999\}$.
 The visited state distribution for each compared method is shown in Fig.3 (a).
 The Robel Screw task is used for evaluation.
 
@@ -240,7 +240,7 @@ In the actor network, two types of activation functions are employed: 1)&nbsp;No
 Furthermore, to enable parallel learning, the actor operates with four instances in parallel during exploration.
 However, for tasks using the Robel robot, parallel learning is not performed, and training is conducted using only a single instance.
 
-| Learning Setting | Value |
+| Parameter | Value |
 | :--- | :--- | 
 | number of Actor | 4<br />1 (When Robel Turn task and Robel Screw task)|
 | batch size | 128 |
@@ -263,13 +263,13 @@ However, for tasks using the Robel robot, parallel learning is not performed, an
 The observation space is a 25-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
 The goal space is originally defined as a 6-dimensional vector composed of the end-effector position and object position. However, to map observations and goals into the same embedding space for contrastive learning, the remaining dimensions are padded with dummy values, resulting in a 25 dimensional representation matching the observation space. 
 The action space is defined as a 3-dimensional vector representing the displacement of the end-effector position.
-The task achievement condition $\Phi_{TA}$ is defined as bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
+The task achievement condition $\Phi_{TA}$ is defined as the bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
 $$
 \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)=\mathbf{1}\left(\left\lVert\begin{array}{c}
     x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
     \end{array}\right\lVert<0.05\right).
 $$
-The reward function $r$ is defined as the sparse reward shown in bellow, where a reward is provided only when the task achievement condition is satisfied:
+The reward function $r$ is defined as the sparse reward shown in the bellow, where a reward is provided only when the task achievement condition is satisfied:
 $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
@@ -277,7 +277,7 @@ $$
 ### 8.2.Fetch Push hard
 <Picture src={T_PushHard} alt="T_FetchPushHard" caption="Overview of Fetch Push Hard" />
 The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. Specifically, this metric is defined based on the number of timesteps required to reach the goal and is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
-The task achievement condition $\Phi_{TA}$ is extended as show in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$.
+The task achievement condition $\Phi_{TA}$ is extended as show in the bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$.
 $$
     \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot(score_{\mathrm{reach-time}}>\epsilon)\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
     x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g} \end{array}\right\lVert<0.05\right)\cdot(score_{\mathrm{reach-time}}>\epsilon).
@@ -294,7 +294,7 @@ The observation space is a 27-dimensional vector that includes the end-effector 
 The action space is defined as a 4-dimensional vector representing the displacement of the end-effector position and gripper position.
 The goal space is originally defined as a 7-dimensional vector that includes the end-effector position, the box position, and additional elements.  It is then padded with dummy values, resulting in a 27-dimensional goal representation.
 In addition, a subgoal-based goal representation is adopted in this task. Specifically, while the end-effector is away from the box, the box position is provided as the goal position of the end-effector. Once the end-effector reaches the box, the goal position of the end-effector is switched to the task goal position. In this manner, the goal of the end-effector is specified in two stages according to the progress of the task.
-The task achievement condition $\Phi_{TA}$ is defined as in bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
+The task achievement condition $\Phi_{TA}$ is defined as in the bellow. Specifically, an episode is considered successful if the box position $s_T=[x_b,y_b,z_b]$ reaches the goal $g=[x_g,y_g,z_g]$ at least once during the episode and the Euclidean distance between them is smaller than a predefined threshold:
 $$
         \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)=\mathbf{1}\left(\left\lVert\begin{array}{c}
         x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
@@ -308,7 +308,7 @@ $$
 ### 8.4.Pick \& Place Hard
 <Picture src={T_PickHard} alt="T_PickHard" caption="Overview of Pick & Place Hard" />
 The training setup is identical to that of the Pick \& Place task, except that a height constraint on the box is introduced. Specifically, the average box height over the past 5 steps, $\mathrm{avg}(z_{\mathrm{box}})$, is added to both the observation and goal representations. As a result, the observation space becomes 28-dimensional and the goal space becomes 8-dimensional, which is then padded with dummy values to obtain a 28-dimensional representation.
-The task achievement condition $\Phi_{TA}$ is extended as shown in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the average box height $\mathrm{avg}(z_{\mathrm{box}})$ remains within a predefined tolerance range.
+The task achievement condition $\Phi_{TA}$ is extended as shown in the bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the average box height $\mathrm{avg}(z_{\mathrm{box}})$ remains within a predefined tolerance range.
 $$
     \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot\mathbf{1}(\lVert \mathrm{avg}(z_{\mathrm{box}})-z_g\lVert<0.05)\\
             =\mathbf{1}\left(\left\lVert\begin{array}{c}
@@ -323,7 +323,7 @@ $$
 ### 8.5.Pick \& Place Obstacle
 <Picture src={T_PickObstacle} alt="T_PickObstacle" caption="Overview of Pick & Place Obstacle" />
 The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation.
-The task achievement condition $\Phi_{TA}$ is extended as shown in bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ sufficient to avoid the obstacle at least once during the episode.
+The task achievement condition $\Phi_{TA}$ is extended as shown in the bellow. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ sufficient to avoid the obstacle at least once during the episode.
 $$
     \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot\mathbf{1}(z_{box}\geq h_{obstacle})\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
     x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
@@ -343,7 +343,7 @@ For each finger, a 3-dimensional action vector corresponding to the displacement
 
 The goal space is a 5-dimensional vector consisting of the valve angle and the number of goal-holding steps. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 13-dimensional representation.
 In addition, a subgoal-based representation is adopted in this task, where the required number of goal-holding steps is adjusted in three stages according to the difference between the current valve angle and the target goal angle.
-The reward $r$ is defined as in bellow, where a sparse reward of 1 is given when the difference between the valve angle and the goal angle falls below a predefined threshold.
+The reward $r$ is defined as in the bellow, where a sparse reward of 1 is given when the difference between the valve angle and the goal angle falls below a predefined threshold.
 $$
     r=\mathbf{1}\left(\left\lVert\begin{array}{c}
     x_{v}-x_{g}\\y_{v}-y_{g}\\
@@ -361,7 +361,7 @@ The action space is constrained such that each finger of the robotic hand moves 
 For each finger, a 3-dimensional action vector corresponding to the displacement along the trajectory is provided.
 The goal space is a 5-dimensional vector consisting of the valve angle and the number of goal-holding steps. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 13-dimensional representation.
 In addition, a subgoal-based representation is adopted in this task, where the target valve angle is updated at each step in order to rotate the valve at a constant speed. This design provides the agent with sequential angle targets that evolve over time.
-The task achievement condition $\Phi_{TA}$ is defined as in bellow. Specifically, an episode is considered successful if the number of timesteps during which the valve reaches the goal exceeds a predefined threshold:
+The task achievement condition $\Phi_{TA}$ is defined as in the bellow. Specifically, an episode is considered successful if the number of timesteps during which the valve reaches the goal exceeds a predefined threshold:
 $$
     \Phi_{TA}=\mathbf{1}\left(\sum_{t=0}^{T}\Phi_t\geq144\right)\\
     \Phi_{t}=\mathbf{1}\left(\left\lVert
