@@ -91,6 +91,7 @@ import ResultMI from "./assets/result_MI.png"
 import EX2_GEOM from "./assets/Ex2_GEOM.png"
 import Ablation_MI from "./assets/Ablation_MI_Component.png"
 import T_Push from "./assets/FetchPush.png"
+import T_PushObstacle from "./assets/FetchPushObstacle.png"
 import T_PushHard from "./assets/FetchPushHard.png"
 import T_Pick from "./assets/Pick.png"
 import T_PickHard from "./assets/PickHard.png"
@@ -306,8 +307,9 @@ In addition, the "gradient updates to perform per step", which is independent of
 ## 9.Detail of task settings
 The task settings such as observation space, goals, and task achievement conditions—are identical across all learning methods. 
 Furthermore, the same subgoal representation is used across all learning methods for tasks where the goal is expressed in the form of subgoals.
-### 9.1.Fetch Push
+### 9.1.Fetch Push & Fetch Push Obstacle
 <Picture src={T_Push} alt="T_FetchPush" caption="Overview of Fetch Push" />
+<Picture src={T_PushObstacle} alt="T_FetchPushObstacle" caption="Overview of Fetch Push Obstacle" />
 The observation space is a 25-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
 The goal space is originally defined as a 6-dimensional vector composed of the end-effector position and object position. However, to map observations and goals into the same embedding space for contrastive learning, the remaining dimensions are padded with dummy values, resulting in a 25 dimensional representation matching the observation space. 
 The action space is defined as a 3-dimensional vector representing the displacement of the end-effector position.
@@ -327,8 +329,8 @@ $$
 The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. Specifically, this metric is defined based on the number of timesteps required to reach the goal and is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
 The task achievement condition $\Phi_{TA}$ is extended as show as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$:
 $$
-    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot(score_{\mathrm{reach-time}}>\epsilon)\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
-    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g} \end{array}\right\lVert<0.05\right)\cdot(score_{\mathrm{reach-time}}>\epsilon).
+    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot(score_{\mathrm{reach-time}}\geq 1)\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
+    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g} \end{array}\right\lVert<0.05\right)\cdot(score_{\mathrm{reach-time}}\geq 1).
 $$
 
 The reward $r$ is defined in the same manner as in the Fetch Push task, where a sparse reward is provided only when the task achievement condition is satisfied:
