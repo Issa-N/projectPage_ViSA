@@ -89,6 +89,7 @@ import MELogo from "./assets/Mitsubishi_Electric_Logo.png";
 import Approach from "./assets/Approach.png";
 import ResultMI from "./assets/result_MI.png"
 import EX2_GEOM from "./assets/Ex2_GEOM.png"
+import Ablation_MI from "./assets/Ablation_MI_Component.png"
 import T_Push from "./assets/FetchPush.png"
 import T_PushHard from "./assets/FetchPushHard.png"
 import T_Pick from "./assets/Pick.png"
@@ -233,13 +234,46 @@ As a result, ViSA achieves faster convergence and lower variance across trials.
 These results suggest that the performance gains of ViSA cannot be explained solely by collecting positive examples from a broader range of visited states.
 Instead, incorporating augmented states through the proposed objective plays an important role in mitigating sample bias while maintaining a consistent value structure in the learned representation.
 
-## 7.Detail of learning settings
+### 7. Ablation with the MI Component
+#### 7.1 Setup
+In the proposed method, the augmented state $s_a$ is used as auxiliary information about hard-to-reach states that are unlikely to be obtained from on-policy rollouts. 
+To incorporate this additional information while preserving the original CRL objective, we learn the embedding space by maximizing the following objective function:
+$$
+\begin{aligned}
+I_{SaFE}&=I((s,a);s_{r})=I((s,a);(s_{r},s_{a}))-I((s,a);s_{a}|s_{r})\\
+& \approx I_{BO}((s,a);(s_{r},s_{a}))-I_{CLUB}((s,a);s_{a}|s_{r})+I_{NCE}((s,a);s_{r}).
+\end{aligned}
+$$
+In above equation, the three mutual information (M\) components, $I_{NCE}$, $I_{CLUB}$, and $I_{BO}$ are combined to represent the original CRL objective function $I((s,a);s_{r})$.
+Therefore, theoretically, all three MI components are required to preserve the original CRL objective function. 
+However, the contribution of each component to the learning of the embedding space and the resulting task performance is not evident from the formulation alone. 
+Therefore, to empirically examine the significance of the proposed objective function, we conducted ablation experiments using all seven possible non-empty combinations of the three MI components in the equation.
+For the learning task, we used the Robel Screw task, in which a three-fingered robot turns a valve at a constant speed.
 
-The details of the learning settings used in the experiments of this study are presented in the the below.
+#### 7.2 Result
+The learning curves of the success rates are shown in below figure.
+The proposed method achieved the highest success rate, followed by the original CRL objective function and an objective function that combines additional information from the extended state,
+"$I_{NCE}((s,a);s_r)+I_{BO}((s,a);(s_r,s_a))$", and the conventional CRL objective function "$I_{NCE}((s,a);s_r)$", in that order.
+In contrast, the other variants showed little to no learning progress, indicating that simply incorporating the augmented state $s_a$ into the embedding-space objective is not sufficient to improve learning performance.
+    
+These results demonstrate that the proposed formulation, which exploits the augmented state $s_a$ as auxiliary information while preserving the original CRL objective, is effective for improving learning performance.
+<Picture src={Ablation_MI} 
+alt="Ablation_MI"
+caption="Ablation with MI Component: Learning curves of success rates. Solid lines show mean success rates over three trials, and shaded regions designate variance." />
+
+
+## 8.Detail of learning settings
+
+The details of the learning settings used in the experiments of this study are presented in the the table 1.
 In the actor network, two types of activation functions are employed: 1)&nbsp;NormalArcTangent is used only in the final layer, while 2)&nbsp;ReLU function is primarily applied throughout the network.
 Furthermore, to enable parallel learning, the actor operates with four instances in parallel during exploration.
 However, for tasks using the Robel robot, parallel learning is not performed, and training is conducted using only a single instance.
 
+For the GCRL baseline methods using HER, the detailed learning settings are summarized in the table 2. 
+To ensure a fair comparison with the proposed method and the CRL family methods, the basic hyperparameters were kept consistent across all methods, and parallel actors were also used for data collection. 
+In addition, the "gradient updates to perform per step", which is independent of data collection, was tuned separately for each method, and the methods were compared using the settings that provided the most stable learning performance.
+
+#### Table 1. Detail of learning settings of CRL family method
 | Parameter | Value |
 | :--- | :--- | 
 | number of Actor | 4<br />1 (When Robel Turn task and Robel Screw task)|
@@ -256,8 +290,23 @@ However, for tasks using the Robel robot, parallel learning is not performed, an
 | representation dimension$\psi, \phi, \hat{\phi}$ | 64 |
 | activation function | ReLU |
 
-## 8.Detail of task settings
-### 8.1.Fetch Push
+#### Table 2. Detail of learning settings of HER+GCRL baselinses
+| Parameters | HER+DDPG | HER+SAC | HER+TD3 |
+| :--- | :---: | :---: | :---: |
+| number of Actor |  | 4 |  |
+| batch size |  | 128 |  |
+| learning rate |  | 0.0003 |  |
+| discount |  | 0.99 |  |
+| gradient updates to perform per step | 4 | 4 | 8 |
+| hidden layers sizes |  | (256, 256) |  |
+| initial random data collection |  | 10,000 transitions |  |
+| replay buffer size |  | 1,000,000 transitions |  |
+| activation function |  | ReLU |  |
+
+## 9.Detail of task settings
+The task settings such as observation space, goals, and task achievement conditions—are identical across all learning methods. 
+Furthermore, the same subgoal representation is used across all learning methods for tasks where the goal is expressed in the form of subgoals.
+### 9.1.Fetch Push
 <Picture src={T_Push} alt="T_FetchPush" caption="Overview of Fetch Push" />
 The observation space is a 25-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
 The goal space is originally defined as a 6-dimensional vector composed of the end-effector position and object position. However, to map observations and goals into the same embedding space for contrastive learning, the remaining dimensions are padded with dummy values, resulting in a 25 dimensional representation matching the observation space. 
@@ -273,7 +322,7 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-### 8.2.Fetch Push hard
+### 9.2.Fetch Push hard
 <Picture src={T_PushHard} alt="T_FetchPushHard" caption="Overview of Fetch Push Hard" />
 The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. Specifically, this metric is defined based on the number of timesteps required to reach the goal and is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
 The task achievement condition $\Phi_{TA}$ is extended as show as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$:
@@ -287,7 +336,7 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-### 8.3.Pick \& Place
+### 9.3.Pick \& Place
 <Picture src={T_Pick} alt="T_Pick" caption="Overview of Pick & Place" />
 The observation space is a 27-dimensional vector that includes the end-effector position, the box position, their velocities, and additional state information relevant to the task. 
 The action space is defined as a 4-dimensional vector representing the displacement of the end-effector position and gripper position.
@@ -304,7 +353,7 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-### 8.4.Pick \& Place Hard
+### 9.4.Pick \& Place Hard
 <Picture src={T_PickHard} alt="T_PickHard" caption="Overview of Pick & Place Hard" />
 The training setup is identical to that of the Pick \& Place task, except that a height constraint on the box is introduced. Specifically, the average box height over the past 5 steps, $\mathrm{avg}(z_{\mathrm{box}})$, is added to both the observation and goal representations. As a result, the observation space becomes 28-dimensional and the goal space becomes 8-dimensional, which is then padded with dummy values to obtain a 28-dimensional representation.
 The task achievement condition $\Phi_{TA}$ is extended as shown as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the average box height $\mathrm{avg}(z_{\mathrm{box}})$ remains within a predefined tolerance range:
@@ -319,7 +368,7 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-### 8.5.Pick \& Place Obstacle
+### 9.5.Pick \& Place Obstacle
 <Picture src={T_PickObstacle} alt="T_PickObstacle" caption="Overview of Pick & Place Obstacle" />
 The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation.
 The task achievement condition $\Phi_{TA}$ is extended as shown as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ sufficient to avoid the obstacle at least once during the episode:
@@ -333,7 +382,7 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-### 8.6.Robel Turn
+### 9.6.Robel Turn
 <Picture src={T_RobelTurn} alt="T_RobelTurn" caption="Overview of Robel Turn" />
 <Picture src={T_TaskSpace} alt="T_TaskSpace" caption="Task space of Robel Tasks" />
 The observation space is a 13-dimensional vector consisting of the valve angle, the end-effector position, and additional state information. 
@@ -353,7 +402,7 @@ The task achievement condition $\Phi_{TA}$ is defined as success if $r = 1$ hold
 
 Furthermore, in the Robel Turn task, training is performed with an early-termination mechanism, where the episode is terminated if the task achievement condition is satisfied for 10 consecutive steps.
 
-### 8.7.Robel Screw
+### 9.7.Robel Screw
 <Picture src={T_RobelScrew} alt="T_RobelScrew" caption="Overview of Robel Screw" />
 The observation space is a 13-dimensional vector consisting of the valve angle, the end-effector position, and additional state information. 
 The action space is constrained such that each finger of the robotic hand moves along a 2-dimensional trajectory. 
