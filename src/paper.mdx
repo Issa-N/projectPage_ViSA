@@ -89,7 +89,7 @@ import MELogo from "./assets/Mitsubishi_Electric_Logo.png";
 import Approach from "./assets/Approach.png";
 import ResultMI from "./assets/result_MI.png"
 import EX2_GEOM from "./assets/Ex2_GEOM.png"
-import Ablation_MI from "./assets/Ablation_MI_Component.png"
+import Ablation_MI from "./assets/Ablation_MI_Comp.png"
 import T_Push from "./assets/FetchPush.png"
 import T_PushObstacle from "./assets/FetchPushObstacle.png"
 import T_PushHard from "./assets/FetchPushHard.png"
@@ -116,6 +116,9 @@ import RobelTurn from "./assets/RobelTurn.mp4";
 import RobelScrew from "./assets/RobelScrew.mp4";
 import RobelTurnReal from "./assets/RobelTurnReal.mp4";
 import RobelScrewReal from "./assets/RobelScrewReal.mp4";
+import HER_Push from "./assets/FetchPush_HER.mp4";
+import HER_PushObstacle from "./assets/FetchPushObstacle_HER.mp4";
+import HER_PickObstacle from "./assets/PickObstacle_HER.mp4";
 
 <HighlightedSection>
 
@@ -123,7 +126,7 @@ import RobelScrewReal from "./assets/RobelScrewReal.mp4";
 Goal-Conditioned Reinforcement Learning (GCRL) is a framework for learning a policy that can reach arbitrarily given goals. 
 In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using an approximation of the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
 However, because CRL treats the visited state as a pseudo-goal during learning, it can accurately estimate the value function only for limited goals.
-To address the issue, we propose a novel data augmentation approach for CRL called ViSA (Visited-State Augmentation). ViSA consists of two components: 1) generating augmented state samples to augment hard-to-visit state samples during on-policy exploration, and 2) learning consistent embedding space, which uses augmented state as auxiliary information to regularize the embedding space, by reformulating the objective function of the embedding space based on Mutual Information.
+To address the issue, we propose a novel data augmentation approach for CRL called ViSA (Visited-State Augmentation). ViSA consists of two components: 1) sampling augmented state samples to augment hard-to-visit state samples during on-policy exploration, and 2) learning consistent embedding space, which uses augmented state as auxiliary information to regularize the embedding space, by reformulating the objective function of the embedding space based on Mutual Information.
 We evaluate ViSA in simulation and real-world robotic tasks and show improved goal-space generalization, enabling accurate value estimation 
 
 </HighlightedSection>
@@ -146,6 +149,7 @@ On this page, we present demonstrations comparing the proposed method with the p
 #### Fetch push
 A task in which a manipulator pushes a box to a target position on the table.
 The initial positions of the end-effector and the box, as well as the goal positions, were uniformly randomized.
+Unlike the standard Gym-Fetch setting, the goal includes both the three-dimensional positions of the box and the end-effector.
 <Video src={Push} />
 
 #### Pick & Place
@@ -162,12 +166,28 @@ The initial valve positions, robot fingertips, and goals were uniformly randomiz
 A task in which the robot rotates a valve by half a turn at a constant speed.
 <Video src={RobelScrew} />
 
+### 3.3 Comparison with ViSA and HER baselines
+#### Fetch Push
+A task in which a manipulator pushes a box to a target position on the table.
+The initial positions of the end-effector and the box, as well as the goal positions, were uniformly randomized.
+Unlike the standard Gym-Fetch setting, the goal includes both the three-dimensional positions of the box and the end-effector.
+<Video src={HER_Push} />
+
+#### Fetch Push Obstacle
+A Fetch Push variant requiring the box to be transported while avoiding an obstacle.
+<Video src={HER_PushObstacle} />
+
+#### Pick & Place Obstacle
+A Pick & Place variant requiring the box to be transported over an obstacle.
+<Video src={HER_PickObstacle} />
+
+
 
 ## 4.Real-world Experiment
 To evaluate the effectiveness of our method for real-world robot learning, we conducted comparative experiments against previous CRL method using the Robel robot.
 Each task was learned under the same settings as in the simulation experiment.
-In addtion, for Robel Turn which has a large exploration-space, we initialized the policy with a network trained in simulation and fine-tuned it on the real robot.
-For Robel Screw, we learns the policy with full scratch.
+For Robel Turn, the policy was initialized with a simulation-trained network and fine-tuned on the real robot, whereas Robel Screw was learned from scratch on the real robot.
+Because Robel Turn has a large exploration space, we adopted simulation-to-real transfer to facilitate training.
 
 #### Robel Turn
 <Video src={RobelTurnReal} caption="Robel Turn"/>
@@ -185,7 +205,7 @@ Specifically, we compare ViSA against InfoNCE and CLUB to evaluate the effect of
 {/*  */}
 
 We simulated the sample bias in CRL using a key property of Gaussian distributions, where samples concentrate near the mean and few samples occur far from it. 
-Specifically, three variables $x,y,z$ corresponding to anchor, visited state, and augmented state are generated via linear transformations and added Gaussian noise $\mathcal{N}(0,I)$:
+Specifically, three variables $x,y,z$ corresponding to anchor, visited state, and augmented state are sampled via linear transformations and added Gaussian noise $\mathcal{N}(0,I)$:
 
 $$
 p(x)= \mathcal{N}(x;0,I),~p(y|x)= \mathcal{N}(y;x,\sigma_{xy}),~p(z)= \mathcal{N}(z;y,\sigma_{yz}).
@@ -223,14 +243,14 @@ The Robel Screw task is used for evaluation.
 alt="Ablation_CRL"
 caption="Fig.3 Visited state distributions and learning results for a naive sample diversification CRL method.
             (a) Visualization of visited state distributions. CRL is modified by adjusting discount factor $\gamma$ to collect visited state samples $s_v$ more broadly from on-policy rollouts. For visualization, sampling probabilities are normalized so that the maximum value is 1.
-            (b) Learning curves of success rates. Solid lines show mean success rates over three trials for proposed method and baselines, and shaded regions designate variance." />
+            (b) Learning curves of success rates. Solid lines show mean success rates over three trials for proposed method and baselines, and shaded regions indicate standard deviation." />
 #### 6.2.Results
 The learning curves of success rates are shown in Fig.3 (b).
-Although increasing $\gamma$ broadens the range of visited states from which positive examples are sampled, the CRL variants with $\gamma=0.999$ (solid yellow line) and $\gamma=0.9999$ (solid green line) exhibit larger variance across trials and slightly worse performance than the original setting with $\gamma=0.99$ (solid blue line).
+Although increasing $\gamma$ broadens the range of visited states from which positive examples are sampled, the CRL variants with $\gamma=0.999$ (solid yellow line) and $\gamma=0.9999$ (solid green line) exhibit larger standard deviation across trials and slightly worse performance than the original setting with $\gamma=0.99$ (solid blue line).
 
 A possible explanation is that increasing $\gamma$ reduces the difference in sampling frequencies among future states at different temporal distances from the anchor, thereby weakening the relative value structure induced by the number of steps required to reach the goal.
 In contrast, ViSA (solid purple line) incorporates augmented states $s_a$ as auxiliary information while preserving the relative ordering of values associated with visited states in the embedding space.
-As a result, ViSA achieves faster convergence and lower variance across trials.
+As a result, ViSA achieves faster convergence and lower standard deviation across trials.
 
 These results suggest that the performance gains of ViSA cannot be explained solely by collecting positive examples from a broader range of visited states.
 Instead, incorporating augmented states through the proposed objective plays an important role in mitigating sample bias while maintaining a consistent value structure in the learned representation.
@@ -241,12 +261,12 @@ In the proposed method, the augmented state $s_a$ is used as auxiliary informati
 To incorporate this additional information while preserving the original CRL objective, we learn the embedding space by maximizing the following objective function:
 $$
 \begin{aligned}
-I_{SaFE}&=I((s,a);s_{r})=I((s,a);(s_{r},s_{a}))-I((s,a);s_{a}|s_{r})\\
-& \approx I_{BO}((s,a);(s_{r},s_{a}))-I_{CLUB}((s,a);s_{a}|s_{r})+I_{NCE}((s,a);s_{r}).
+I_{SaFE}&=I((s,a);s_{v})=I((s,a);(s_{v},s_{a}))-I((s,a);s_{a}|s_{v})\\
+& \approx I_{BO}((s,a);(s_{v},s_{a}))-I_{CLUB}((s,a);(s_{v},s_{a}))+I_{NCE}((s,a);s_{v}).
 \end{aligned}
 $$
 In above equation, the three mutual information (M\) components, $I_{NCE}$, $I_{CLUB}$, and $I_{BO}$ are combined to represent the original CRL objective function $I((s,a);s_{r})$.
-Therefore, theoretically, all three MI components are required to preserve the original CRL objective function. 
+These three MI components together constitute the proposed surrogate for the original CRL objective.
 However, the contribution of each component to the learning of the embedding space and the resulting task performance is not evident from the formulation alone. 
 Therefore, to empirically examine the significance of the proposed objective function, we conducted ablation experiments using all seven possible non-empty combinations of the three MI components in the equation.
 For the learning task, we used the Robel Screw task, in which a three-fingered robot turns a valve at a constant speed.
@@ -260,8 +280,7 @@ In contrast, the other variants showed little to no learning progress, indicatin
 These results demonstrate that the proposed formulation, which exploits the augmented state $s_a$ as auxiliary information while preserving the original CRL objective, is effective for improving learning performance.
 <Picture src={Ablation_MI} 
 alt="Ablation_MI"
-caption="Ablation with MI Component: Learning curves of success rates. Solid lines show mean success rates over three trials, and shaded regions designate variance." />
-
+caption="Fig.4: Ablation with MI Component: Learning curves of success rates. Solid lines show mean success rates over three trials, and shaded regions indicate standard deviation." />
 
 ## 8.Detail of learning settings
 
@@ -272,7 +291,7 @@ However, for tasks using the Robel robot, parallel learning is not performed, an
 
 For the GCRL baseline methods using HER, the detailed learning settings are summarized in the table 2. 
 To ensure a fair comparison with the proposed method and the CRL family methods, the basic hyperparameters were kept consistent across all methods, and parallel actors were also used for data collection. 
-In addition, the "gradient updates to perform per step", which is independent of data collection, was tuned separately for each method, and the methods were compared using the settings that provided the most stable learning performance.
+In addition, the ``gradient updates to perform per step'', which is independent of data collection, was tuned separately for each method.
 
 #### Table 1. Detail of learning settings of CRL family method
 | Parameter | Value |
@@ -373,16 +392,34 @@ $$
 ### 9.5.Pick \& Place Obstacle
 <Picture src={T_PickObstacle} alt="T_PickObstacle" caption="Overview of Pick & Place Obstacle" />
 The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation.
-The task achievement condition $\Phi_{TA}$ is extended as shown as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ sufficient to avoid the obstacle at least once during the episode:
+The task achievement condition $\Phi_{TA}$ is extended as shown as follows. 
+Specifically, a task is considered successful if the box position $s_t$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ that is sufficient to avoid the obstacle at least once during the episode. 
+The latter condition is evaluated using the maximum box height achieved up to timestep $t$:
+
 $$
-    \Phi_{TA}=\mathbf{1}(\lVert s_{T}-g\lVert<0.05)\cdot\mathbf{1}(z_{box}\geq h_{obstacle})\\=\mathbf{1}\left(\left\lVert\begin{array}{c}
-    x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
-    \end{array}\right\lVert<0.05\right)\cdot\mathbf{1}(z_{box}\geq h_{obstacle}).
+    \Phi_{TA} = \mathbf{1}(\lVert s_t-g\lVert<0.05)
+            \cdot
+            \mathbf{1}\left(
+            \max_{0\leq \tau\leq t}z_{\mathrm{box},\tau}
+            \geq h_{\mathrm{obstacle}}
+            \right)\\
+            =\mathbf{1}\left(\left\lVert\begin{array}{c}
+                x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+                \end{array}\right\lVert<0.05\right)\cdot
+            \mathbf{1}\left(
+            \max_{0\leq \tau\leq t}z_{\mathrm{box},\tau}
+            \geq h_{\mathrm{obstacle}}
+            \right).
 $$
-The reward $r$ is defined in the same manner as in the Pick \& Place task, where a sparse reward is provided only when the task achievement condition is satisfied:
+
+Here, $T$ denotes episode length. The reward $r$ is defined as a sparse reward, provided only when the task achievement condition is satisfied:
 $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
+
+For the HER baselines, goals were relabeled using the achieved 3-dimensional box positions $(x_{\mathrm{b\_achieved}},y_{\mathrm{b\_achieved}},z_{\mathrm{b\_achieved}})$ from the corresponding trajectories. 
+The obstacle height threshold $h_{\mathrm{obstacle}}$ was set to the height of the relabeled goal $z_{\mathrm{b\_achieved}}$. 
+The reward and success conditions were then recomputed consistently with the relabeled goal.
 
 ### 9.6.Robel Turn
 <Picture src={T_RobelTurn} alt="T_RobelTurn" caption="Overview of Robel Turn" />
