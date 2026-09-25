@@ -124,7 +124,7 @@ import HER_PickObstacle from "./assets/PickObstacle_HER.mp4";
 
 ## 1.Abstract
 Goal-Conditioned Reinforcement Learning (GCRL) is a framework for learning a policy that can reach arbitrarily given goals. 
-In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using an approximation of the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
+In particular, Contrastive Reinforcement Learning (CRL) provides a framework for policy updates using a surrogate for the value function estimated via Contrastive Learning, achieving higher sample efficiency compared to conventional methods.
 However, because CRL treats the visited state as a pseudo-goal during learning, it can accurately estimate the value function only for limited goals.
 To address the issue, we propose a novel data augmentation approach for CRL called ViSA (Visited-State Augmentation). ViSA consists of two components: 1) sampling augmented state samples to augment hard-to-visit state samples during on-policy exploration, and 2) learning consistent embedding space, which uses augmented state as auxiliary information to regularize the embedding space, by reformulating the objective function of the embedding space based on Mutual Information.
 We evaluate ViSA in simulation and real-world robotic tasks and show improved goal-space generalization, enabling accurate value estimation 
@@ -197,7 +197,7 @@ Because Robel Turn has a large exploration space, we adopted simulation-to-real 
 
 ## 5.Analysis of Mutual Information Estimation Accuracy
 ### 5.1.Setup
-Learning the embedding space in CRL can be viewed as a mutual information (MI) estimation problem, since the objective is to maximize InfoNCE loss. {/*  \cite{CPC}.  */}
+Learning the embedding space in CRL can be viewed as a mutual information (MI) estimation problem, since the objective is to maximize InfoNCE objective. {/*  \cite{CPC}.  */}
 To evaluate whether the factorized MI estimation using $I_{SaFE}$ in ViSA contributes to improving accuracy, we compared the errors between ground-truth and estimated MI values using synthetic datasets.
 {/* RAL後に以下の部分をついか */}
 In addition to evaluating estimation accuracy, this analysis provides additional insight into the contribution of the proposed MI estimation framework. 
@@ -224,8 +224,8 @@ Consequently, when augmented states are properly related to visited states, MI e
 
 <Picture src={ResultMI} 
 alt="resutl MI"
-caption="Fig.2 Results of MI analysis experiment: (a) Experiment result, where solid lines show estimated MI values for each method and the ground-truth MI of the dataset and dashed black lines indicate the upper bound of MI estimated by InfoNCE loss. 
-      From left to right, these results correspond to settings where the MI between visited states and augmented states is increasingly higher. 
+caption="Fig.2 Results of MI analysis experiment: (a) Experiment result, where solid lines show estimated MI values for each method and the ground-truth MI of the dataset and dashed black lines indicate the upper bound of MI estimated by InfoNCE ojective. 
+      From left to right, these results correspond to settings where the MI between visited states and augmented states is increasingly lower. 
       (b) Outline diagram illustrating the relevance between visited and augmented states." />
 
 
@@ -258,26 +258,26 @@ Instead, incorporating augmented states through the proposed objective plays an 
 ### 7. Ablation with the MI Component
 #### 7.1 Setup
 In the proposed method, the augmented state $s_a$ is used as auxiliary information about hard-to-reach states that are unlikely to be obtained from on-policy rollouts. 
-To incorporate this additional information while preserving the original CRL objective, we learn the embedding space by maximizing the following objective function:
+To incorporate this additional information while preserving the original CRL objective function, we learn the embedding space by maximizing the following objective function:
 $$
 \begin{aligned}
-I_{SaFE}&=I((s,a);s_{v})=I((s,a);(s_{v},s_{a}))-I((s,a);s_{a}|s_{v})\\
-& \approx I_{BO}((s,a);(s_{v},s_{a}))-I_{CLUB}((s,a);(s_{v},s_{a}))+I_{NCE}((s,a);s_{v}).
+I_{SaFE}&=I((s,a);s_v)=I((s,a);(s_v,s_{a}))-I((s,a);s_{a}|s_v)\\
+                &\geq \tilde{I}_{BO}((s,a);(s_v,s_{a})|\psi,\phi,\hat{\phi};f_{v,a})-\tilde{I}_{CLUB}((s,a);(s_{v},s_{a})|\psi,\phi,\hat{\phi};f_{v,a})\\
+                &\hspace{6cm}+\tilde{I}_{NCE}((s,a);s_v|\psi,\phi;f_v)\\
+                &=\tilde{I}_{SaFE}.
 \end{aligned}
 $$
-In above equation, the three mutual information (M\) components, $I_{NCE}$, $I_{CLUB}$, and $I_{BO}$ are combined to represent the original CRL objective function $I((s,a);s_{r})$.
-These three MI components together constitute the proposed surrogate for the original CRL objective.
+These three MI components together constitute the proposed surrogate for the original CRL objective. 
 However, the contribution of each component to the learning of the embedding space and the resulting task performance is not evident from the formulation alone. 
-Therefore, to empirically examine the significance of the proposed objective function, we conducted ablation experiments using all seven possible non-empty combinations of the three MI components in the equation.
+Therefore, to empirically examine the significance of the proposed objective function, we conducted ablation experiments using all seven possible non-empty combinations of the three MI components in the proposed objective. 
 For the learning task, we used the Robel Screw task, in which a three-fingered robot turns a valve at a constant speed.
 
 #### 7.2 Result
 The learning curves of the success rates are shown in below figure.
-The proposed method achieved the highest success rate, followed by the original CRL objective function and an objective function that combines additional information from the extended state,
-"$I_{NCE}((s,a);s_r)+I_{BO}((s,a);(s_r,s_a))$", and the conventional CRL objective function "$I_{NCE}((s,a);s_r)$", in that order.
-In contrast, the other variants showed little to no learning progress, indicating that simply incorporating the augmented state $s_a$ into the embedding-space objective is not sufficient to improve learning performance.
+The proposed method achieved the highest success rate, followed by the objective function that combines additional information from the augmented state $\tilde{I}_{NCE}+\tilde{I}_{BO}$, and the conventional CRL objective function $\tilde{I}_{NCE}$, in that order.
+    In contrast, the other variants showed little to no learning progress, indicating that simply incorporating the augmented state $s_a$ into the embedding-space objective without preserving the structure of the original CRL objective is not sufficient to improve learning performance.
     
-These results demonstrate that the proposed formulation, which exploits the augmented state $s_a$ as auxiliary information while preserving the original CRL objective, is effective for improving learning performance.
+    These results demonstrate that the proposed formulation, which exploits the augmented state $s_a$ as auxiliary information while preserving the original CRL objective function, is effective for improving learning performance.
 <Picture src={Ablation_MI} 
 alt="Ablation_MI"
 caption="Fig.4: Ablation with MI Component: Learning curves of success rates. Solid lines show mean success rates over three trials, and shaded regions indicate standard deviation." />
@@ -345,6 +345,29 @@ $$
 
 ### 9.2.Fetch Push hard
 <Picture src={T_PushHard} alt="T_FetchPushHard" caption="Overview of Fetch Push Hard" />
+The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. 
+Specifically, this metric accumulates a time-dependent score at each timestep when the box is within the goal region. 
+The score increment is larger at earlier timesteps and is defined as
+$$
+\Delta score_{\mathrm{reach\_time}, t} =
+        \begin{cases}
+        \displaystyle
+        \frac{1}{10}\left(1-\frac{t-25}{T-25}\right),
+        & \text{if } \lVert s_t-g\rVert<0.05,\\
+        0, & \text{otherwise},
+        \end{cases}
+$$
+where $T$ denotes the episode length, $s_t=[x_b,y_b,z_b]$ denotes the box position, and $g=[x_g,y_g,z_g]$ denotes the goal position. The cumulative score is updated as
+$$
+score_{\mathrm{reach\_time}, t} =
+            \operatorname{clip}
+        \left(
+        \sum_{k=0}^{t}
+        \Delta score_k,\ 0,\ 1
+        \right).
+$$
+This metric is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
+
 The training setup is identical to that of the Fetch Push task, except that a time-based metric $score_{\mathrm{reach-time}}$ is introduced to encourage faster object transport. Specifically, this metric is defined based on the number of timesteps required to reach the goal and is included in both the observation and goal spaces. As a result, the observation space becomes 26-dimensional and the goal space becomes 7-dimensional, which is then padded with dummy values to obtain a 26-dimensional representation.
 The task achievement condition $\Phi_{TA}$ is extended as show as follows. Specifically, a task is considered successful if the box position $s_T$ reaches the goal $g$ and $score_{\mathrm{reach-time}}$ satisfies a predefined threshold $\epsilon$:
 $$
@@ -391,25 +414,30 @@ $$
 
 ### 9.5.Pick \& Place Obstacle
 <Picture src={T_PickObstacle} alt="T_PickObstacle" caption="Overview of Pick & Place Obstacle" />
-The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation.
-The task achievement condition $\Phi_{TA}$ is extended as shown as follows. 
-Specifically, a task is considered successful if the box position $s_t$ reaches the goal $g$ and the box is lifted to a height $z_{box}\geq h_{obstacle}$ that is sufficient to avoid the obstacle at least once during the episode. 
-The latter condition is evaluated using the maximum box height achieved up to timestep $t$:
+The training setup is identical to that of the Pick \& Place task. The observation space is a 27-dimensional vector, while the goal space is a 7-dimensional vector. To align the goal representation with the observation space, the goal vector is padded with dummy values, resulting in a 27-dimensional representation. 
+In addition, the observation includes a history-dependent variable $h_{\mathrm{achieved}}$, which represents the normalized box height. During data collection, the obstacle height threshold $h_{\mathrm{obstacle}}$ is fixed at 1. 
+Once the box reaches this threshold $h_{\mathrm{achieved}}$ is set to 1 and remains 1 thereafter, even if the box is subsequently lowered; otherwise, it reflects the box's normalized height.
 
+The task achievement condition $\Phi_{TA}$ is extended as shown in the follow equation. 
+Specifically, a task is considered successful if the box position $s_t$ reaches the goal position $g$ and the box is lifted to a height $h_{\mathrm{achieved}}\geq h_{obstacle}$ that is sufficient to avoid the obstacle at least once during the episode. 
+The latter condition is evaluated using the maximum box height achieved up to timestep $t$:
 $$
-    \Phi_{TA} = \mathbf{1}(\lVert s_t-g\lVert<0.05)
-            \cdot
-            \mathbf{1}\left(
-            \max_{0\leq \tau\leq t}z_{\mathrm{box},\tau}
-            \geq h_{\mathrm{obstacle}}
-            \right)\\
-            =\mathbf{1}\left(\left\lVert\begin{array}{c}
-                x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
-                \end{array}\right\lVert<0.05\right)\cdot
-            \mathbf{1}\left(
-            \max_{0\leq \tau\leq t}z_{\mathrm{box},\tau}
-            \geq h_{\mathrm{obstacle}}
-            \right).
+    \begin{split}
+        \Phi_{TA}
+        &= \mathbf{1}(\lVert s_t-g\lVert<0.05)
+        \cdot
+        \mathbf{1}\left(
+        \max_{0\leq \tau\leq t}h_{\mathrm{achieved},\tau}
+        \geq h_{\mathrm{obstacle}}
+        \right)\\
+        &=\mathbf{1}\left(\left\lVert\begin{array}{c}
+            x_{b}-x_{g}\\y_{b}-y_{g}\\z_{b}-z_{g}
+            \end{array}\right\lVert<0.05\right)\cdot
+        \mathbf{1}\left(
+        \max_{0\leq \tau\leq t}h_{\mathrm{achieved},\tau}
+        \geq h_{\mathrm{obstacle}}
+        \right).
+        \end{split}
 $$
 
 Here, $T$ denotes episode length. The reward $r$ is defined as a sparse reward, provided only when the task achievement condition is satisfied:
@@ -417,9 +445,11 @@ $$
     r = \mathbf{1}(\Phi_{TA}=1).
 $$
 
-For the HER baselines, goals were relabeled using the achieved 3-dimensional box positions $(x_{\mathrm{b\_achieved}},y_{\mathrm{b\_achieved}},z_{\mathrm{b\_achieved}})$ from the corresponding trajectories. 
-The obstacle height threshold $h_{\mathrm{obstacle}}$ was set to the height of the relabeled goal $z_{\mathrm{b\_achieved}}$. 
-The reward and success conditions were then recomputed consistently with the relabeled goal.
+For the HER baselines, goals are relabeled using achieved 3-dimensional box positions $(x_{\mathrm{b\_achieved}},$ $y_{\mathrm{b\_achieved}}, z_{\mathrm{b\_achieved}})$ from the corresponding trajectories. 
+As part of this relabeling, the threshold $h_{\mathrm{obstacle}}$ specified in the relabeled goal is set to the corresponding achieved value of $h_{\mathrm{achieved}}$. 
+The reward and task achievement conditions are then recomputed at each timestep using the relabeled goal and the corresponding trajectory history. 
+This relabeling is performed only during HER training and does not change the obstacle height in the environment. 
+During evaluation, all methods use the original fixed obstacle-height threshold of 1.
 
 ### 9.6.Robel Turn
 <Picture src={T_RobelTurn} alt="T_RobelTurn" caption="Overview of Robel Turn" />
